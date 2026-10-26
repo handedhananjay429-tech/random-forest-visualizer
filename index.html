@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Random Forest Visualizer – Interactive ML Education</title>
+<meta name="description" content="Interactively learn how Random Forest classifiers work through live visualizations, decision boundaries, and tree-by-tree animations."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ===== CSS CUSTOM PROPERTIES (design tokens) ===== */
+:root {
+  --bg-primary: #0d0f17;
+  --bg-secondary: #13161f;
+  --bg-card: #1a1d28;
+  --bg-card-hover: #1e2230;
+  --border: #2a2d3e;
+  --border-accent: #3d4166;
+  --text-primary: #e8eaf6;
+  --text-secondary: #9fa3c7;
+  --text-muted: #5c6080;
+  --accent-blue: #4f8ef7;
+  --accent-blue-dim: #1e3a6e;
+  --accent-orange: #f7944f;
+  --accent-orange-dim: #6e3a1e;
+  --accent-green: #4ff7a0;
+  --accent-green-dim: #1e6e45;
+  --accent-purple: #a04ff7;
+  --accent-yellow: #f7d24f;
+  --gradient-header: linear-gradient(135deg, #1a1d40 0%, #0d1220 100%);
+  --gradient-blue: linear-gradient(135deg, #4f8ef7, #7c5ff7);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-glow-blue: 0 0 20px rgba(79,142,247,0.15);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 3px; }
+
+/* ===== HEADER ===== */
+.header {
+  background: var(--gradient-header);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(79,142,247,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.header-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+.header-icon {
+  width: 56px; height: 56px;
+  background: var(--gradient-blue);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-glow-blue);
+}
+.header-text h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, #9fa3c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header-text .subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  max-width: 700px;
+  line-height: 1.7;
+}
+.badge-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.badge {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px;
+}
+.badge-blue  { background: rgba(79,142,247,0.15); color: var(--accent-blue);   border: 1px solid rgba(79,142,247,0.25); }
+.badge-orange{ background: rgba(247,148,79,0.15); color: var(--accent-orange); border: 1px solid rgba(247,148,79,0.25); }
+.badge-green { background: rgba(79,247,160,0.15); color: var(--accent-green);  border: 1px solid rgba(79,247,160,0.25); }
+
+/* ===== MAIN LAYOUT ===== */
+.main {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 24px 48px;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: var(--transition);
+}
+.card:hover { border-color: var(--border-accent); }
+.card-title {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.card-title-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-blue); }
+
+/* ===== FORM CONTROLS ===== */
+.control-group { margin-bottom: 14px; }
+.control-group:last-child { margin-bottom: 0; }
+.control-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px;
+}
+.control-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+  color: var(--accent-blue); background: rgba(79,142,247,0.1);
+  padding: 1px 7px; border-radius: 4px;
+}
+
+input[type="range"] {
+  width: 100%; appearance: none; height: 4px;
+  border-radius: 2px; background: var(--border); outline: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent-blue); cursor: pointer; transition: var(--transition);
+  box-shadow: 0 0 8px rgba(79,142,247,0.4);
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2); box-shadow: 0 0 14px rgba(79,142,247,0.6);
+}
+
+select {
+  width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-size: 13px; font-family: 'Inter', sans-serif;
+  padding: 8px 12px; cursor: pointer; outline: none; transition: var(--transition);
+}
+select:focus { border-color: var(--accent-blue); }
+select option { background: var(--bg-card); }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.toggle-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.toggle { position: relative; width: 36px; height: 20px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--border); border-radius: 20px; transition: var(--transition);
+}
+.toggle-slider::before {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  border-radius: 50%; left: 3px; top: 3px;
+  background: var(--text-muted); transition: var(--transition);
+}
+.toggle input:checked + .toggle-slider { background: var(--accent-blue); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(16px); background: white; }
+
+.class-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.class-btn {
+  padding: 8px 6px; border-radius: var(--radius-sm); border: 2px solid transparent;
+  cursor: pointer; font-size: 12px; font-weight: 600; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.class-btn-blue  { background: var(--accent-blue-dim);   color: var(--accent-blue); }
+.class-btn-orange{ background: var(--accent-orange-dim); color: var(--accent-orange); }
+.class-btn-blue.active   { border-color: var(--accent-blue);   box-shadow: 0 0 10px rgba(79,142,247,0.3); }
+.class-btn-orange.active { border-color: var(--accent-orange); box-shadow: 0 0 10px rgba(247,148,79,0.3); }
+
+.btn {
+  width: 100%; padding: 10px 16px; border-radius: var(--radius-sm); border: none;
+  cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  transition: var(--transition); display: flex; align-items: center;
+  justify-content: center; gap: 7px; letter-spacing: 0.2px;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-primary  { background: var(--gradient-blue); color: white; box-shadow: 0 4px 14px rgba(79,142,247,0.3); }
+.btn-primary:hover:not(:disabled)   { box-shadow: 0 6px 20px rgba(79,142,247,0.45); transform: translateY(-1px); }
+.btn-secondary{ background: rgba(79,142,247,0.1); color: var(--accent-blue); border: 1px solid rgba(79,142,247,0.25); }
+.btn-secondary:hover:not(:disabled) { background: rgba(79,142,247,0.18); }
+.btn-ghost    { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--border-accent); }
+.btn-danger   { background: rgba(247,79,79,0.1); color: #f74f4f; border: 1px solid rgba(247,79,79,0.2); }
+.btn-danger:hover:not(:disabled) { background: rgba(247,79,79,0.18); }
+.btn-row   { display: flex; flex-direction: column; gap: 7px; }
+.btn-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+.status-box {
+  background: linear-gradient(135deg, rgba(79,142,247,0.06), rgba(124,95,247,0.06));
+  border: 1px solid rgba(79,142,247,0.2); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: 12px; color: var(--text-secondary);
+  line-height: 1.6; min-height: 44px;
+}
+.status-box strong { color: var(--accent-blue); }
+
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric-item {
+  background: var(--bg-primary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px; text-align: center;
+}
+.metric-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700;
+  color: var(--accent-green); line-height: 1; margin-bottom: 3px;
+}
+.metric-value.na { color: var(--text-muted); font-size: 14px; }
+.metric-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+/* ===== VIZ AREA ===== */
+.viz-area { display: flex; flex-direction: column; gap: 16px; }
+.panels-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+.panel-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; transition: var(--transition);
+}
+.panel-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-glow-blue); }
+.panel-header {
+  padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); }
+.panel-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.panel-badge-blue   { background: rgba(79,142,247,0.15); color: var(--accent-blue); }
+.panel-badge-green  { background: rgba(79,247,160,0.15); color: var(--accent-green); }
+.panel-badge-purple { background: rgba(160,79,247,0.15); color: var(--accent-purple); }
+
+.panel-body { padding: 0; position: relative; }
+canvas { display: block; cursor: crosshair; }
+.canvas-wrapper { position: relative; width: 100%; }
+
+/* ===== VOTE TOOLTIP ===== */
+.vote-tooltip {
+  position: absolute; background: rgba(13,15,23,0.95);
+  border: 1px solid var(--border-accent); border-radius: var(--radius-md);
+  padding: 12px 14px; font-size: 12px; pointer-events: none; z-index: 100;
+  min-width: 160px; backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-card); display: none;
+}
+.vote-tooltip.visible { display: block; }
+.vote-title { font-weight: 700; margin-bottom: 8px; color: var(--text-primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+.vote-bar-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.vote-bar-label { font-size: 11px; color: var(--text-secondary); width: 40px; }
+.vote-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.vote-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.vote-bar-count { font-size: 11px; font-family: 'JetBrains Mono', monospace; width: 24px; text-align: right; }
+.vote-result { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); }
+.vote-result strong { color: var(--text-primary); }
+
+/* ===== GALLERY ===== */
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; }
+.gallery-thumb {
+  border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border);
+  cursor: pointer; transition: var(--transition); position: relative;
+}
+.gallery-thumb:hover { border-color: var(--accent-blue); transform: scale(1.03); }
+.gallery-thumb.selected { border-color: var(--accent-blue); box-shadow: 0 0 12px rgba(79,142,247,0.3); }
+.gallery-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(13,15,23,0.85); font-size: 9px; font-weight: 600;
+  text-align: center; padding: 2px; color: var(--text-secondary); letter-spacing: 0.3px;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-wrap { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.progress-bar-fill { height: 100%; background: var(--gradient-blue); border-radius: 2px; transition: width 0.3s; }
+
+/* ===== LEGEND ===== */
+.legend { display: flex; gap: 14px; padding: 8px 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid; }
+.legend-dot-blue   { background: rgba(79,142,247,0.3);  border-color: var(--accent-blue); }
+.legend-dot-orange { background: rgba(247,148,79,0.3);  border-color: var(--accent-orange); }
+.legend-dot-grey   { background: rgba(100,100,120,0.3); border-color: #555; }
+
+/* ===== SPINNER ===== */
+.spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: none;
+}
+.spinner.visible { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.pulsing { animation: pulse 1.2s ease-in-out infinite; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 200px; color: var(--text-muted); font-size: 12px; gap: 8px;
+}
+.empty-icon { font-size: 28px; opacity: 0.4; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+  .main { grid-template-columns: 260px 1fr; }
+  .panels-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; padding: 12px; }
+  .panels-row { grid-template-columns: 1fr; }
+  .header { padding: 20px; }
+  .header-inner { flex-direction: column; gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-icon">&#127795;</div>
+    <div class="header-text">
+      <h1>Random Forest Visualizer</h1>
+      <p class="subtitle">
+        A <strong>Random Forest</strong> trains many decision trees on different random bootstrap samples of the data,
+        with each tree also picking a random subset of features at each split. The final prediction is the
+        <em>majority vote</em> across all trees — reducing overfitting and producing a smoother, more accurate decision boundary than any single tree.
+        Hover over the canvas to see how each tree votes!
+      </p>
+      <div class="badge-row">
+        <span class="badge badge-blue">Gini Impurity</span>
+        <span class="badge badge-blue">Bootstrap Sampling</span>
+        <span class="badge badge-orange">Random Feature Selection</span>
+        <span class="badge badge-green">Majority Voting</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+
+    <!-- Dataset Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot"></span>Dataset</div>
+      <div class="control-group">
+        <div class="control-label"><span>Shape</span></div>
+        <select id="datasetSelect">
+          <option value="moons">&#127769; Moons</option>
+          <option value="circles">&#11093; Circles</option>
+          <option value="blobs">&#129704; Two Blobs</option>
+          <option value="xor">&#10006; XOR</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>Number of Points</span>
+          <span class="control-value" id="nPointsVal">200</span>
+        </div>
+        <input type="range" id="nPoints" min="40" max="500" value="200" step="10"/>
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>Noise</span>
+          <span class="control-value" id="noiseVal">0.15</span>
+        </div>
+        <input type="range" id="noiseSlider" min="0" max="0.5" value="0.15" step="0.01"/>
+      </div>
+      <button class="btn btn-secondary" id="generateBtn">&#128260; Generate New Data</button>
+    </div>
+
+    <!-- Add Points Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--accent-orange)"></span>Add Points (Click Canvas)</div>
+      <div class="class-selector">
+        <button class="class-btn class-btn-blue active" id="selectBlue" onclick="selectClass(0)">
+          &#9679; Class A
+        </button>
+        <button class="class-btn class-btn-orange" id="selectOrange" onclick="selectClass(1)">
+          &#9679; Class B
+        </button>
+      </div>
+    </div>
+
+    <!-- Forest Controls Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--accent-green)"></span>Forest Controls</div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>Number of Trees</span>
+          <span class="control-value" id="nTreesVal">10</span>
+        </div>
+        <input type="range" id="nTrees" min="1" max="100" value="10"/>
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>Max Depth</span>
+          <span class="control-value" id="maxDepthVal">4</span>
+        </div>
+        <input type="range" id="maxDepth" min="1" max="10" value="4"/>
+      </div>
+      <div class="control-group">
+        <div class="control-label">
+          <span>Max Features per Split</span>
+          <span class="control-value" id="maxFeatVal">2</span>
+        </div>
+        <input type="range" id="maxFeat" min="1" max="2" value="2"/>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">1 = more randomness, 2 = uses both x &amp; y</div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Bootstrap Sampling</span>
+        <label class="toggle">
+          <input type="checkbox" id="bootstrapToggle" checked/>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:-4px;line-height:1.5;">When ON: each tree trains on a random sample with replacement (enables OOB scoring).</div>
+      <!-- Change 4: warning shown when both bootstrap=OFF and maxFeat=2, because trees
+           then see the same data AND the same features, making them nearly identical. -->
+      <div id="identicalWarning" style="display:none;margin-top:10px;padding:8px 10px;
+           background:rgba(247,210,79,0.08);border:1px solid rgba(247,210,79,0.28);
+           border-radius:6px;font-size:10px;color:#f7d24f;line-height:1.55;">
+        &#9888; All trees will be almost identical, so the forest behaves like a single tree.
+        Turn on bootstrap sampling or lower Max Features to see the benefit of randomness.
+      </div>
+    </div>
+
+    <!-- Action Buttons Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--accent-purple)"></span>Actions</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="trainBtn">
+          <span class="spinner" id="trainSpinner"></span>
+          <span id="trainBtnLabel">&#128640; Train Forest</span>
+        </button>
+        <button class="btn btn-secondary" id="addTreeBtn" disabled>&#10133; Add One Tree</button>
+        <div class="btn-row-2">
+          <button class="btn btn-ghost" id="nextTreeBtn" onclick="cycleSelectedTree()">&#128269; Next Tree</button>
+          <button class="btn btn-danger" id="resetBtn">&#9851; Reset</button>
+        </div>
+      </div>
+      <div class="progress-bar-wrap" style="margin-top:10px">
+        <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--accent-yellow)"></span>Status</div>
+      <div class="status-box" id="statusBox">
+        Generate a dataset and click <strong>Train Forest</strong> to begin.
+      </div>
+    </div>
+
+    <!-- Metrics Card -->
+    <div class="card">
+      <div class="card-title"><span class="card-title-dot" style="background:var(--accent-green)"></span>Metrics</div>
+      <!-- Change 3: renamed from "Single Tree" to "Selected Tree (from the forest)" -->
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Selected Tree (from the forest)</div>
+      <div class="metrics-grid" style="margin-bottom:12px;">
+        <div class="metric-item">
+          <div class="metric-value na" id="treeTrainAcc">--</div>
+          <div class="metric-label">Train Acc</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value na" id="treeTestAcc">--</div>
+          <div class="metric-label">Test Acc</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Random Forest</div>
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <div class="metric-value na" id="forestTrainAcc">--</div>
+          <div class="metric-label">Train Acc</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value na" id="forestTestAcc">--</div>
+          <div class="metric-label">Test Acc</div>
+        </div>
+        <div class="metric-item" style="grid-column:span 2;">
+          <div class="metric-value na" id="oobScore">--</div>
+          <div class="metric-label">Out-of-Bag Score</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ===== VIZ AREA ===== -->
+  <section class="viz-area">
+    <div class="panels-row">
+
+      <!-- Panel 1: Selected Decision Tree (Change 3: renamed from "Single Decision Tree") -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">&#127795; Selected Tree (from the forest)</span>
+          <span class="panel-badge panel-badge-blue" id="singleTreeBadge">Tree 1</span>
+        </div>
+        <div class="panel-body">
+          <div class="canvas-wrapper">
+            <canvas id="treeCanvas"></canvas>
+            <div class="vote-tooltip" id="treeTooltip">
+              <!-- Change 2: title updated to reflect single-tree prediction, not a vote count -->
+              <div class="vote-title">&#127795; This Tree Predicts</div>
+              <div id="treeVoteContent"></div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot legend-dot-blue"></div>Class A (in sample)</div>
+            <div class="legend-item"><div class="legend-dot legend-dot-orange"></div>Class B (in sample)</div>
+            <div class="legend-item"><div class="legend-dot legend-dot-grey"></div>Out-of-bag</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Random Forest Boundary -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">&#127795; Random Forest Boundary</span>
+          <span class="panel-badge panel-badge-green" id="forestBadge">0 Trees</span>
+        </div>
+        <div class="panel-body">
+          <div class="canvas-wrapper">
+            <canvas id="forestCanvas"></canvas>
+            <div class="vote-tooltip" id="forestTooltip">
+              <div class="vote-title">&#128499; Forest Vote</div>
+              <div id="forestVoteContent"></div>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot legend-dot-blue"></div>Class A region</div>
+            <div class="legend-item"><div class="legend-dot legend-dot-orange"></div>Class B region</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Tree Gallery -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title">&#128444; Tree Gallery</span>
+          <span class="panel-badge panel-badge-purple" id="galleryBadge">0 / 8</span>
+        </div>
+        <div class="panel-body">
+          <div id="galleryGrid" class="gallery-grid">
+            <div class="empty-state" style="grid-column:span 4;">
+              <div class="empty-icon">&#127795;</div>
+              <div>Train the forest to see individual trees</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== JAVASCRIPT — Random Forest from Scratch ===== -->
+<script>
+/* ============================================================
+   RANDOM FOREST VISUALIZER
+   Algorithms implemented from scratch:
+     - Gini impurity for split quality
+     - Recursive binary decision tree building
+     - Bootstrap sampling (sample with replacement)
+     - Random feature selection per split
+     - Majority voting ensemble (random forest)
+   ============================================================ */
+
+// ── Global constants ───────────────────────────────────────
+const CANVAS_SIZE = 340;   // pixel size of main visualisation canvases
+const GRID_RES    = 65;    // grid cells per axis for boundary rendering
+const THUMB_RES   = 30;    // boundary grid cells for thumbnail canvases
+const THUMB_SIZE  = 100;   // pixel size of each thumbnail
+
+// Class colour palette for rendering
+const CC = {
+  0: { fill:'#4f8ef7', stroke:'#2266cc', region:'rgba(79,142,247,' },
+  1: { fill:'#f7944f', stroke:'#cc6622', region:'rgba(247,148,79,' }
+};
+
+// ── Application state ──────────────────────────────────────
+let points       = [];   // Array of { x, y, label } in [0,1]^2
+let trainIdx     = [];   // Indices of points used for training (75%)
+let testIdx      = [];   // Indices of points held out for testing (25%)
+let trees        = [];   // Array of trained DecisionTree objects
+let selectedTree = 0;    // Which tree index is displayed in Panel 1
+let selectedClass= 0;    // Class the user adds when clicking the canvas
+let animating    = false;// Guard flag for the "Add One Tree" animation
+let boundaryCache= {};   // Cache: treeIndex -> Float32Array of grid predictions
+
+// ── Canvas setup ───────────────────────────────────────────
+const treeCanvas   = document.getElementById('treeCanvas');
+const forestCanvas = document.getElementById('forestCanvas');
+const treeCtx      = treeCanvas.getContext('2d');
+const forestCtx    = forestCanvas.getContext('2d');
+
+function initCanvases() {
+  [treeCanvas, forestCanvas].forEach(c => {
+    c.width  = CANVAS_SIZE;
+    c.height = CANVAS_SIZE;
+    c.style.width  = '100%';
+    c.style.height = 'auto';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DATA GENERATION UTILITIES
+// ═══════════════════════════════════════════════════════════
+
+// Box-Muller transform: returns a standard-normal random number
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// Clamp a value to the [0,1] range
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+// Two interleaved half-circles (the classic "moons" dataset)
+function generateMoons(n, noise) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const label = i < n / 2 ? 0 : 1;
+    const angle = Math.PI * (i % (n / 2)) / (n / 2);
+    const r = 0.25;
+    const cx = label === 0 ? 0.32 : 0.68;
+    const cy = label === 0 ? 0.42 : 0.58;
+    const a  = label === 0 ? angle : angle + Math.PI;
+    pts.push({ x: clamp01(cx + r*Math.cos(a) + randn()*noise),
+               y: clamp01(cy + r*Math.sin(a) + randn()*noise), label });
+  }
+  return pts;
+}
+
+// Inner and outer concentric circles
+function generateCircles(n, noise) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const label = i < n / 2 ? 0 : 1;
+    const r     = label === 0 ? 0.13 : 0.3;
+    const angle = Math.random() * 2 * Math.PI;
+    pts.push({ x: clamp01(0.5 + r*Math.cos(angle) + randn()*noise),
+               y: clamp01(0.5 + r*Math.sin(angle) + randn()*noise), label });
+  }
+  return pts;
+}
+
+// Two separate Gaussian blobs
+function generateBlobs(n, noise) {
+  const centres = [[0.3, 0.38], [0.7, 0.62]];
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const label = i < n / 2 ? 0 : 1;
+    const [cx, cy] = centres[label];
+    pts.push({ x: clamp01(cx + randn()*(0.1+noise)),
+               y: clamp01(cy + randn()*(0.1+noise)), label });
+  }
+  return pts;
+}
+
+// XOR pattern: four quadrants with alternating labels
+function generateXOR(n, noise) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const qx    = Math.random() > 0.5 ? 1 : 0;
+    const qy    = Math.random() > 0.5 ? 1 : 0;
+    const label = qx ^ qy; // XOR: same quadrant diagonal = class 0, opposite = class 1
+    pts.push({ x: clamp01((qx === 0 ? 0.12 : 0.55) + Math.random()*0.3 + randn()*noise),
+               y: clamp01((qy === 0 ? 0.12 : 0.55) + Math.random()*0.3 + randn()*noise), label });
+  }
+  return pts;
+}
+
+// Generate data, split 75/25, reset trees
+function generateData() {
+  const dataset = document.getElementById('datasetSelect').value;
+  const n       = parseInt(document.getElementById('nPoints').value);
+  const noise   = parseFloat(document.getElementById('noiseSlider').value);
+
+  const fn = { moons: generateMoons, circles: generateCircles,
+                blobs: generateBlobs, xor: generateXOR }[dataset];
+  points = fn(n, noise);
+
+  splitTrainTest();
+  trees = []; boundaryCache = {}; selectedTree = 0;
+  drawAll(); updateMetrics(); renderGallery(); updateForestBadge();
+  setStatus(`Generated <strong>${dataset}</strong> dataset: <strong>${n}</strong> points, noise = <strong>${noise.toFixed(2)}</strong>. Ready to train!`);
+}
+
+// Shuffle array in-place (Fisher-Yates)
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// Stratified-ish 75/25 split
+function splitTrainTest() {
+  const idx = points.map((_, i) => i);
+  shuffle(idx);
+  const cut = Math.floor(idx.length * 0.75);
+  trainIdx  = idx.slice(0, cut);
+  testIdx   = idx.slice(cut);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DECISION TREE ALGORITHM (from scratch)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Gini impurity of a label array.
+ * Gini = 1 - sum(p_k^2), where p_k = fraction of class k.
+ * Gini = 0 means the node is perfectly pure (one class only).
+ */
+function gini(labels) {
+  if (labels.length === 0) return 0;
+  const cnt = {};
+  for (const l of labels) cnt[l] = (cnt[l]||0) + 1;
+  let g = 1;
+  for (const k in cnt) { const p = cnt[k]/labels.length; g -= p*p; }
+  return g;
+}
+
+/**
+ * Weighted Gini after splitting into left / right child nodes.
+ * We minimise this to find the best split.
+ */
+function giniSplit(lLabels, rLabels) {
+  const n = lLabels.length + rLabels.length;
+  return (lLabels.length * gini(lLabels) + rLabels.length * gini(rLabels)) / n;
+}
+
+// Return the most-common label in an array (tie → 0)
+function majority(labels) {
+  const cnt = {};
+  for (const l of labels) cnt[l] = (cnt[l]||0) + 1;
+  let best = 0, bestC = -1;
+  for (const k in cnt) if (cnt[k] > bestC) { best = +k; bestC = cnt[k]; }
+  return best;
+}
+
+/**
+ * Bootstrap sampling: draw n items with replacement from arr.
+ * Returns { sampleIdx, oobIdx }.
+ * OOB (out-of-bag) = items in arr that were never drawn — used to
+ * estimate generalisation without a dedicated validation set.
+ */
+function bootstrap(arr) {
+  const drawn = new Set();
+  const sampleIdx = [];
+  for (let i = 0; i < arr.length; i++) {
+    const pick = arr[Math.floor(Math.random() * arr.length)];
+    sampleIdx.push(pick);
+    drawn.add(pick);
+  }
+  const oobIdx = arr.filter(i => !drawn.has(i));
+  return { sampleIdx, oobIdx };
+}
+
+// A node in the decision tree
+class TreeNode {
+  constructor() {
+    this.feat  = null;  // 0 = feature x, 1 = feature y
+    this.thr   = null;  // threshold value
+    this.left  = null;  // left child (feat <= thr)
+    this.right = null;  // right child (feat >  thr)
+    this.label = null;  // only set on leaf nodes
+  }
+}
+
+/**
+ * Recursively build a decision tree node.
+ * @param idxArr    - point indices in this node
+ * @param depth     - current depth in the tree
+ * @param maxDepth  - stop splitting beyond this depth
+ * @param maxFeat   - how many features to randomly consider per split (1 or 2)
+ */
+function buildNode(idxArr, depth, maxDepth, maxFeat) {
+  const labels = idxArr.map(i => points[i].label);
+  const node   = new TreeNode();
+
+  // --- Stopping criteria ---
+  // Pure node, too deep, or too few samples → make a leaf
+  if (depth >= maxDepth || new Set(labels).size <= 1 || idxArr.length < 2) {
+    node.label = majority(labels);
+    return node;
+  }
+
+  // --- Feature selection: randomly pick a subset of features ---
+  // This is the KEY difference between Random Forest and bagged trees.
+  const feats = [0, 1];
+  shuffle(feats);
+  const candFeats = feats.slice(0, maxFeat);
+
+  let bestG = Infinity, bestFeat = null, bestThr = null, bestL = null, bestR = null;
+
+  for (const feat of candFeats) {
+    // Collect and sort feature values to find candidate split thresholds
+    const vals = [...new Set(idxArr.map(i => feat === 0 ? points[i].x : points[i].y))].sort((a,b)=>a-b);
+
+    // Sample up to 20 midpoint thresholds for speed (avoids O(n^2) per node)
+    const step = Math.max(1, Math.floor(vals.length / 20));
+    for (let k = 0; k < vals.length - 1; k += step) {
+      const thr  = (vals[k] + vals[k+1]) / 2;
+      const lIdx = idxArr.filter(i => (feat===0 ? points[i].x : points[i].y) <= thr);
+      const rIdx = idxArr.filter(i => (feat===0 ? points[i].x : points[i].y) >  thr);
+      if (lIdx.length === 0 || rIdx.length === 0) continue;
+
+      const g = giniSplit(lIdx.map(i=>points[i].label), rIdx.map(i=>points[i].label));
+      if (g < bestG) { bestG=g; bestFeat=feat; bestThr=thr; bestL=lIdx; bestR=rIdx; }
+    }
+  }
+
+  // No valid split found → leaf
+  if (bestFeat === null) { node.label = majority(labels); return node; }
+
+  node.feat  = bestFeat;
+  node.thr   = bestThr;
+  node.left  = buildNode(bestL, depth+1, maxDepth, maxFeat);
+  node.right = buildNode(bestR, depth+1, maxDepth, maxFeat);
+  return node;
+}
+
+// Predict a single point by traversing a tree node
+function predictNode(node, x, y) {
+  if (node.label !== null) return node.label; // reached a leaf
+  const val = node.feat === 0 ? x : y;
+  return val <= node.thr
+    ? predictNode(node.left,  x, y)
+    : predictNode(node.right, x, y);
+}
+
+// DecisionTree wrapper with bootstrap metadata
+class DecisionTree {
+  constructor(root, sampleIdx, oobIdx) {
+    this.root      = root;       // trained tree root
+    this.sampleIdx = sampleIdx;  // indices of points in bootstrap sample
+    this.oobIdx    = oobIdx;     // indices of out-of-bag (never seen) points
+  }
+  predict(x, y) { return predictNode(this.root, x, y); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TRAINING FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+
+// Train a single decision tree on a (possibly bootstrapped) sample
+function trainOneTree() {
+  const maxDepth = parseInt(document.getElementById('maxDepth').value);
+  const maxFeat  = parseInt(document.getElementById('maxFeat').value);
+  const useBS    = document.getElementById('bootstrapToggle').checked;
+
+  let sampleIdx, oobIdx;
+  if (useBS) {
+    // Bootstrap: draw trainIdx.length samples with replacement
+    ({ sampleIdx, oobIdx } = bootstrap(trainIdx));
+  } else {
+    // No bootstrap: use full training set; no OOB
+    sampleIdx = [...trainIdx];
+    oobIdx    = [];
+  }
+
+  const root = buildNode(sampleIdx, 0, maxDepth, maxFeat);
+  return new DecisionTree(root, sampleIdx, oobIdx);
+}
+
+// Train the full forest, updating the UI progressively
+function trainForest() {
+  if (points.length < 10) { setStatus('Please generate a dataset first.'); return; }
+
+  const nTrees = parseInt(document.getElementById('nTrees').value);
+  trees = []; boundaryCache = {}; selectedTree = 0;
+
+  document.getElementById('trainSpinner').classList.add('visible');
+  document.getElementById('trainBtnLabel').textContent = 'Training…';
+  document.getElementById('trainBtn').disabled     = true;
+  document.getElementById('addTreeBtn').disabled   = true;
+  setStatus(`Training <strong>${nTrees} trees</strong>…`, true);
+
+  let i = 0;
+  // Process trees in chunks to keep the browser responsive (non-blocking)
+  function chunk() {
+    const size = Math.max(1, Math.ceil(nTrees / 30));
+    for (let k = 0; k < size && i < nTrees; k++, i++) {
+      trees.push(trainOneTree());
+    }
+    document.getElementById('progressBar').style.width = Math.round(i/nTrees*100) + '%';
+
+    if (i < nTrees) {
+      requestAnimationFrame(chunk); // yield to browser, then continue
+    } else {
+      // Training complete
+      document.getElementById('trainSpinner').classList.remove('visible');
+      document.getElementById('trainBtnLabel').innerHTML = '&#128640; Train Forest';
+      document.getElementById('trainBtn').disabled   = false;
+      document.getElementById('addTreeBtn').disabled = false;
+      setStatus(`Forest ready: <strong>${nTrees} trees</strong>. Hover over the canvas to see votes!`);
+      drawAll(); updateMetrics(); renderGallery(); updateForestBadge();
+    }
+  }
+  requestAnimationFrame(chunk);
+}
+
+// Add exactly one more tree (with a brief animation guard)
+function addOneTree() {
+  if (points.length < 10) { setStatus('Generate a dataset first.'); return; }
+  if (animating) return;
+  animating = true;
+  document.getElementById('addTreeBtn').disabled = true;
+
+  const tree = trainOneTree();
+  trees.push(tree);
+  selectedTree = trees.length - 1;
+
+  setStatus(`Added <strong>Tree ${trees.length}</strong>: sample size <strong>${tree.sampleIdx.length}</strong>, OOB size <strong>${tree.oobIdx.length}</strong>.`);
+  drawAll(); updateMetrics(); renderGallery(); updateForestBadge();
+
+  setTimeout(() => {
+    animating = false;
+    document.getElementById('addTreeBtn').disabled = false;
+  }, 350);
+}
+
+// Clear all trees and reset visuals
+function resetAll() {
+  trees = []; boundaryCache = {}; selectedTree = 0;
+  drawAll(); updateMetrics(); renderGallery(); updateForestBadge();
+  document.getElementById('addTreeBtn').disabled = true;
+  document.getElementById('progressBar').style.width = '0%';
+  setStatus('Forest reset. Regenerate data or train again.');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BOUNDARY GRID COMPUTATION (cached per tree)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Compute a GRID_RES x GRID_RES prediction grid for tree `treeIdx`.
+ * Grid values are 0 or 1 (class label).
+ * Results are cached to avoid redundant computation.
+ */
+function getTreeGrid(treeIdx) {
+  if (boundaryCache[treeIdx]) return boundaryCache[treeIdx];
+  const t    = trees[treeIdx];
+  const grid = new Uint8Array(GRID_RES * GRID_RES);
+  for (let r = 0; r < GRID_RES; r++) {
+    for (let c = 0; c < GRID_RES; c++) {
+      grid[r*GRID_RES + c] = t.predict(c/(GRID_RES-1), r/(GRID_RES-1));
+    }
+  }
+  boundaryCache[treeIdx] = grid;
+  return grid;
+}
+
+/**
+ * Compute the ensemble forest boundary by accumulating votes across all trees.
+ * Returns an array of { label, conf } per grid cell.
+ */
+function getForestGrid() {
+  if (trees.length === 0) return null;
+  const v0 = new Uint16Array(GRID_RES * GRID_RES);
+  const v1 = new Uint16Array(GRID_RES * GRID_RES);
+
+  for (let t = 0; t < trees.length; t++) {
+    const g = getTreeGrid(t);
+    for (let i = 0; i < g.length; i++) {
+      if (g[i] === 0) v0[i]++; else v1[i]++;
+    }
+  }
+
+  return Array.from({ length: GRID_RES*GRID_RES }, (_, i) => {
+    const total = v0[i] + v1[i];
+    const label = v0[i] >= v1[i] ? 0 : 1;
+    return { label, conf: Math.max(v0[i], v1[i]) / total };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DRAWING FUNCTIONS
+// ═══════════════════════════════════════════════════════════
+
+// Map a [0,1] data coordinate to canvas pixel, leaving a 5% margin
+function toPixel(v, size) { return v * size * 0.90 + size * 0.05; }
+
+// Draw the coloured decision-boundary background onto a canvas context
+function drawBoundary(ctx, grid, isForest, size) {
+  if (!grid) return;
+  const cellW = size / GRID_RES + 1;
+  const cellH = size / GRID_RES + 1;
+
+  for (let r = 0; r < GRID_RES; r++) {
+    for (let c = 0; c < GRID_RES; c++) {
+      const entry = grid[r*GRID_RES + c];
+      const label = isForest ? entry.label : entry;
+      // For the forest panel, opacity encodes vote confidence (more opaque = more certain)
+      const alpha = isForest ? 0.12 + entry.conf * 0.28 : 0.18;
+      ctx.fillStyle = CC[label].region + alpha + ')';
+      ctx.fillRect(c * (size/GRID_RES), r * (size/GRID_RES), cellW, cellH);
+    }
+  }
+}
+
+// Draw a boundary using a lower-resolution grid (for thumbnails)
+function drawThumbBoundary(ctx, tree, size) {
+  const cw = size / THUMB_RES + 1;
+  const ch = size / THUMB_RES + 1;
+  for (let r = 0; r < THUMB_RES; r++) {
+    for (let c = 0; c < THUMB_RES; c++) {
+      const label = tree.predict(c/(THUMB_RES-1), r/(THUMB_RES-1));
+      ctx.fillStyle = CC[label].region + '0.22)';
+      ctx.fillRect(c*(size/THUMB_RES), r*(size/THUMB_RES), cw, ch);
+    }
+  }
+}
+
+// Draw all data points onto a canvas
+function drawPoints(ctx, size, oobSet) {
+  // Sort so OOB points are drawn underneath in-sample points
+  const order = points.map((_, i) => i);
+  if (oobSet) order.sort((a,b) => (oobSet.has(a)?-1:1) - (oobSet.has(b)?-1:1));
+
+  for (const i of order) {
+    const p  = points[i];
+    const px = toPixel(p.x, size);
+    const py = toPixel(p.y, size);
+    const isOOB = oobSet && oobSet.has(i);
+
+    ctx.beginPath();
+    ctx.arc(px, py, isOOB ? 3.5 : 4.5, 0, Math.PI*2);
+    ctx.fillStyle   = isOOB ? 'rgba(110,110,140,0.45)' : CC[p.label].fill;
+    ctx.strokeStyle = isOOB ? 'rgba(140,140,170,0.5)'  : CC[p.label].stroke;
+    ctx.lineWidth = 1.2;
+    ctx.fill();
+    ctx.stroke();
+
+    // Test-set points get a faint outer ring to distinguish them
+    if (!isOOB && testIdx.includes(i)) {
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+// Render Panel 1: the selected single decision tree
+function drawTreePanel() {
+  const ctx = treeCtx, S = CANVAS_SIZE;
+  ctx.clearRect(0, 0, S, S);
+  ctx.fillStyle = '#0f1118';
+  ctx.fillRect(0, 0, S, S);
+
+  if (trees.length === 0) {
+    drawEmptyMsg(ctx, S, 'No trees trained yet');
+    return;
+  }
+
+  const tree = trees[selectedTree];
+  drawBoundary(ctx, getTreeGrid(selectedTree), false, S);
+  drawPoints(ctx, S, new Set(tree.oobIdx)); // grey out OOB points
+
+  // Annotation: sample / OOB counts
+  ctx.fillStyle = 'rgba(200,205,240,0.45)';
+  ctx.font = '9.5px JetBrains Mono, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`sample: ${tree.sampleIdx.length}  oob: ${tree.oobIdx.length}`, 8, S-8);
+
+  document.getElementById('singleTreeBadge').textContent = `Tree ${selectedTree+1} / ${trees.length}`;
+}
+
+// Render Panel 2: the combined forest decision boundary
+function drawForestPanel() {
+  const ctx = forestCtx, S = CANVAS_SIZE;
+  ctx.clearRect(0, 0, S, S);
+  ctx.fillStyle = '#0f1118';
+  ctx.fillRect(0, 0, S, S);
+
+  if (trees.length === 0) {
+    drawEmptyMsg(ctx, S, 'No trees trained yet');
+    return;
+  }
+
+  drawBoundary(ctx, getForestGrid(), true, S);
+  drawPoints(ctx, S, null); // show all points normally
+}
+
+// Helper: draw a centred placeholder message
+function drawEmptyMsg(ctx, S, msg) {
+  ctx.fillStyle = 'rgba(100,110,150,0.4)';
+  ctx.font = '13px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(msg, S/2, S/2);
+}
+
+// Redraw all panels
+function drawAll() {
+  drawTreePanel();
+  drawForestPanel();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TREE GALLERY
+// ═══════════════════════════════════════════════════════════
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const n    = Math.min(trees.length, 8);
+  document.getElementById('galleryBadge').textContent = `${n} / 8`;
+
+  if (n === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:span 4;">
+      <div class="empty-icon">&#127795;</div>
+      <div>Train the forest to see individual trees</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const wrap  = document.createElement('div');
+    wrap.className = 'gallery-thumb' + (i === selectedTree ? ' selected' : '');
+
+    const c = document.createElement('canvas');
+    c.width  = THUMB_SIZE;
+    c.height = THUMB_SIZE;
+    c.style.width  = '100%';
+    c.style.height = 'auto';
+
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#0f1118';
+    ctx.fillRect(0, 0, THUMB_SIZE, THUMB_SIZE);
+
+    // Draw low-res boundary for this tree
+    drawThumbBoundary(ctx, trees[i], THUMB_SIZE);
+
+    // Draw tiny points on the thumbnail
+    const oobSet = new Set(trees[i].oobIdx);
+    points.forEach((p, pi) => {
+      const px = toPixel(p.x, THUMB_SIZE);
+      const py = toPixel(p.y, THUMB_SIZE);
+      ctx.beginPath();
+      ctx.arc(px, py, oobSet.has(pi) ? 1.2 : 1.8, 0, Math.PI*2);
+      ctx.fillStyle = oobSet.has(pi) ? 'rgba(110,110,130,0.45)' : CC[p.label].fill;
+      ctx.fill();
+    });
+
+    const lbl = document.createElement('div');
+    lbl.className   = 'gallery-label';
+    lbl.textContent = `T${i+1}`;
+
+    wrap.appendChild(c);
+    wrap.appendChild(lbl);
+
+    // Clicking a thumbnail selects it in Panel 1
+    const idx = i;
+    wrap.addEventListener('click', () => {
+      selectedTree = idx;
+      renderGallery();
+      drawTreePanel();
+      updateMetrics();
+      setStatus(`Showing <strong>Tree ${idx+1}</strong>: sample = ${trees[idx].sampleIdx.length}, OOB = ${trees[idx].oobIdx.length}.`);
+    });
+
+    grid.appendChild(wrap);
+  }
+}
+
+// Cycle through trees one by one ("Next Tree" button)
+function cycleSelectedTree() {
+  if (trees.length === 0) return;
+  selectedTree = (selectedTree + 1) % trees.length;
+  renderGallery();
+  drawTreePanel();
+  updateMetrics();
+  setStatus(`Viewing <strong>Tree ${selectedTree+1}</strong> of ${trees.length}. Bootstrap sample: <strong>${trees[selectedTree].sampleIdx.length}</strong> pts.`);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  METRICS (accuracy, OOB score)
+// ═══════════════════════════════════════════════════════════
+
+// Compute accuracy of a predictor function on a set of point indices
+function accuracy(idxArr, predictFn) {
+  if (idxArr.length === 0) return null;
+  let correct = 0;
+  for (const i of idxArr) {
+    const p = points[i];
+    if (predictFn(p.x, p.y) === p.label) correct++;
+  }
+  return correct / idxArr.length;
+}
+
+// Forest majority-vote prediction for a single point
+function forestPredict(x, y) {
+  if (trees.length === 0) return null;
+  let v0 = 0, v1 = 0;
+  for (const t of trees) {
+    if (t.predict(x, y) === 0) v0++; else v1++;
+  }
+  return v0 >= v1 ? 0 : 1;
+}
+
+/**
+ * Out-of-bag (OOB) score:
+ * For each training point, predict using only the trees that did NOT
+ * include that point in their bootstrap sample.
+ * This gives an unbiased estimate of generalisation without needing
+ * a separate validation set — one of the unique advantages of Random Forests.
+ */
+function computeOOB() {
+  if (trees.length === 0) return null;
+  let correct = 0, counted = 0;
+
+  for (const i of trainIdx) {
+    const oobTrees = trees.filter(t => t.oobIdx.includes(i));
+    if (oobTrees.length === 0) continue; // point seen by every tree — skip
+
+    let v0 = 0, v1 = 0;
+    for (const t of oobTrees) {
+      if (t.predict(points[i].x, points[i].y) === 0) v0++; else v1++;
+    }
+    const pred = v0 >= v1 ? 0 : 1;
+    if (pred === points[i].label) correct++;
+    counted++;
+  }
+  return counted === 0 ? null : correct / counted;
+}
+
+function updateMetrics() {
+  const fmt = v => v === null ? '--' : (v*100).toFixed(1) + '%';
+
+  let tTA = null, tTA2 = null;
+  if (trees.length > 0) {
+    const t = trees[selectedTree];
+    tTA  = accuracy(trainIdx, (x,y) => t.predict(x,y));
+    tTA2 = accuracy(testIdx,  (x,y) => t.predict(x,y));
+  }
+  const fTrain = trees.length > 0 ? accuracy(trainIdx, forestPredict) : null;
+  const fTest  = trees.length > 0 ? accuracy(testIdx,  forestPredict) : null;
+  const oob    = computeOOB();
+
+  const colour = v => v===null ? '' : v>=0.85 ? 'var(--accent-green)' : v>=0.70 ? 'var(--accent-yellow)' : 'var(--accent-orange)';
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    el.textContent = fmt(v);
+    el.className   = 'metric-value' + (v===null ? ' na' : '');
+    if (v !== null) el.style.color = colour(v);
+  };
+  set('treeTrainAcc',   tTA);
+  set('treeTestAcc',    tTA2);
+  set('forestTrainAcc', fTrain);
+  set('forestTestAcc',  fTest);
+  set('oobScore',       oob);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VOTE TOOLTIP  (hover on canvas)
+// ═══════════════════════════════════════════════════════════
+
+// Convert a mouse event to both canvas-pixel and data-space coordinates
+function getCoords(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width  / rect.width;
+  const sy = canvas.height / rect.height;
+  const cx = (evt.clientX - rect.left) * sx;
+  const cy = (evt.clientY - rect.top)  * sy;
+  return {
+    cx, cy,
+    dx: (cx / canvas.width  - 0.05) / 0.90,
+    dy: (cy / canvas.height - 0.05) / 0.90
+  };
+}
+
+function showVote(tooltip, content, canvasEl, cx, cy, dx, dy) {
+  if (trees.length === 0 || dx<0 || dx>1 || dy<0 || dy>1) {
+    tooltip.classList.remove('visible');
+    return;
+  }
+
+  // Count how each tree votes for this point
+  let v0=0, v1=0;
+  for (const t of trees) { if (t.predict(dx,dy)===0) v0++; else v1++; }
+  const total  = v0+v1;
+  const winner = v0>=v1 ? 0 : 1;
+  const p0 = Math.round(v0/total*100);
+  const p1 = Math.round(v1/total*100);
+
+  content.innerHTML = `
+    <div class="vote-bar-row">
+      <span class="vote-bar-label" style="color:#4f8ef7">Class A</span>
+      <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${p0}%;background:#4f8ef7"></div></div>
+      <span class="vote-bar-count" style="color:#4f8ef7">${v0}</span>
+    </div>
+    <div class="vote-bar-row">
+      <span class="vote-bar-label" style="color:#f7944f">Class B</span>
+      <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${p1}%;background:#f7944f"></div></div>
+      <span class="vote-bar-count" style="color:#f7944f">${v1}</span>
+    </div>
+    <div class="vote-result">
+      Majority: <strong style="color:${CC[winner].fill}">${winner===0?'Class A':'Class B'}</strong>
+      &nbsp;(${Math.max(p0,p1)}% confidence)
+    </div>`;
+
+  // Position the tooltip near the cursor, keeping it inside the canvas wrapper
+  const rect = canvasEl.getBoundingClientRect();
+  const scX  = rect.width  / canvasEl.width;
+  const scY  = rect.height / canvasEl.height;
+  let left = cx*scX + 12;
+  let top  = cy*scY - 10;
+  if (left + 175 > rect.width)  left = cx*scX - 185;
+  if (top  + 130 > rect.height) top  = cy*scY - 140;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top  = top  + 'px';
+  tooltip.classList.add('visible');
+}
+
+// Attach hover/leave listeners to both main canvases
+function attachVoteListeners(canvas, tooltipId, contentId) {
+  const tooltip = document.getElementById(tooltipId);
+  const content = document.getElementById(contentId);
+  canvas.addEventListener('mousemove', e => {
+    const { cx, cy, dx, dy } = getCoords(canvas, e);
+    showVote(tooltip, content, canvas, cx, cy, dx, dy);
+  });
+  canvas.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+}
+
+// Change 2: the tree-canvas uses a dedicated single-tree tooltip (not all-tree votes).
+// It shows only the selected tree's prediction so the panel stays focused on that one tree.
+function attachSingleTreeVoteListener(canvas, tooltipId, contentId) {
+  const tooltip = document.getElementById(tooltipId);
+  const content = document.getElementById(contentId);
+  canvas.addEventListener('mousemove', e => {
+    const { cx, cy, dx, dy } = getCoords(canvas, e);
+    if (trees.length === 0 || dx < 0 || dx > 1 || dy < 0 || dy > 1) {
+      tooltip.classList.remove('visible'); return;
+    }
+    const pred   = trees[selectedTree].predict(dx, dy);
+    const colour = CC[pred].fill;
+    const label  = pred === 0 ? 'Class A' : 'Class B';
+    content.innerHTML = `<div style="font-size:13px;font-weight:700;color:${colour};margin-bottom:4px;">${label}</div>
+      <div style="font-size:10px;color:var(--text-muted);">Tree ${selectedTree+1} of ${trees.length}</div>`;
+
+    // Position tooltip near cursor, same logic as showVote()
+    const rect = canvas.getBoundingClientRect();
+    const scX  = rect.width  / canvas.width;
+    const scY  = rect.height / canvas.height;
+    let left = cx*scX + 12;
+    let top  = cy*scY - 10;
+    if (left + 160 > rect.width)  left = cx*scX - 170;
+    if (top  + 80  > rect.height) top  = cy*scY - 90;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+    tooltip.classList.add('visible');
+  });
+  canvas.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+}
+attachSingleTreeVoteListener(treeCanvas, 'treeTooltip', 'treeVoteContent');
+attachVoteListeners(forestCanvas, 'forestTooltip', 'forestVoteContent');
+
+// ═══════════════════════════════════════════════════════════
+//  ADD POINTS BY CLICKING
+// ═══════════════════════════════════════════════════════════
+
+function handleCanvasClick(canvas, evt) {
+  const { dx, dy } = getCoords(canvas, evt);
+  if (dx < 0 || dx > 1 || dy < 0 || dy > 1) return;
+
+  const newIdx = points.length;
+  points.push({ x: dx, y: dy, label: selectedClass });
+
+  // Change 1 (bug fix): Do NOT call splitTrainTest() here.
+  // splitTrainTest() reshuffles the entire dataset, which would move points that
+  // already-trained trees saw in their bootstrap sample into testIdx — inflating
+  // test error and making OOB scores meaningless.
+  // Instead, assign only this new point to train (75%) or test (25%) by itself,
+  // leaving every previously-assigned index exactly where it was.
+  if (Math.random() < 0.75) {
+    trainIdx.push(newIdx);
+  } else {
+    testIdx.push(newIdx);
+  }
+
+  drawAll(); // redraw with new point (trees unchanged, just refresh dots)
+  setStatus(`Added a <strong>${selectedClass===0?'Class A':'Class B'}</strong> point at (${dx.toFixed(2)}, ${dy.toFixed(2)}). Retrain to update boundaries.`);
+}
+
+treeCanvas.addEventListener('click',   e => handleCanvasClick(treeCanvas,   e));
+forestCanvas.addEventListener('click', e => handleCanvasClick(forestCanvas, e));
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+
+function setStatus(html, pulse=false) {
+  const el = document.getElementById('statusBox');
+  el.innerHTML = html;
+  el.style.animation = pulse ? 'pulse 1.2s ease-in-out infinite' : '';
+}
+
+function updateForestBadge() {
+  document.getElementById('forestBadge').textContent =
+    `${trees.length} Tree${trees.length!==1?'s':''}`;
+  document.getElementById('addTreeBtn').disabled = points.length < 10;
+}
+
+// Class selector buttons
+function selectClass(cls) {
+  selectedClass = cls;
+  document.getElementById('selectBlue').classList.toggle('active',   cls===0);
+  document.getElementById('selectOrange').classList.toggle('active', cls===1);
+}
+
+// Live-update slider value labels
+[
+  ['nTrees',      'nTreesVal',   v => v],
+  ['maxDepth',    'maxDepthVal', v => v],
+  ['maxFeat',     'maxFeatVal',  v => v],
+  ['nPoints',     'nPointsVal',  v => v],
+  ['noiseSlider', 'noiseVal',    v => parseFloat(v).toFixed(2)]
+].forEach(([sliderId, labelId, fmt]) => {
+  document.getElementById(sliderId).addEventListener('input', function() {
+    document.getElementById(labelId).textContent = fmt(this.value);
+  });
+});
+
+// Change 4: show/hide the "identical trees" warning whenever the relevant controls change.
+// The warning applies when bootstrap is OFF (no sampling randomness) AND maxFeat is 2
+// (no feature-selection randomness), meaning every tree trains on the same data with the
+// same splits — making the forest redundant.
+function updateIdenticalWarning() {
+  const noBootstrap = !document.getElementById('bootstrapToggle').checked;
+  const allFeats    = document.getElementById('maxFeat').value === '2';
+  document.getElementById('identicalWarning').style.display =
+    (noBootstrap && allFeats) ? 'block' : 'none';
+}
+document.getElementById('bootstrapToggle').addEventListener('change', updateIdenticalWarning);
+document.getElementById('maxFeat').addEventListener('input', updateIdenticalWarning);
+updateIdenticalWarning(); // run once on load to set initial state
+
+// Button wiring
+document.getElementById('generateBtn').addEventListener('click', generateData);
+document.getElementById('trainBtn').addEventListener('click', trainForest);
+document.getElementById('addTreeBtn').addEventListener('click', addOneTree);
+document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+// ═══════════════════════════════════════════════════════════
+//  INITIALISE
+// ═══════════════════════════════════════════════════════════
+initCanvases();
+generateData(); // auto-generate the moons dataset on page load
+</script>
+</body>
+</html>
