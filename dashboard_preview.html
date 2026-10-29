@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Performance Dashboard</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    .kpi-card {
+      background: #19335A;
+      color: #ffffff;
+      border-radius: 4px;
+      padding: 16px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: transform 0.15s ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+    }
+    .chart-container {
+      background: #ffffff;
+      border: 1px solid #E2E8F0;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .grid-line {
+      stroke: #EEF2F6;
+      stroke-width: 1;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased p-4 md:p-6 font-sans">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <div class="text-center pb-2">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Sample Sales Performance Dashboard</h1>
+      <p class="text-sm text-slate-500 mt-1">Full-year performance overview across 18,450 transactions • FY 2024</p>
+    </div>
+
+    <!-- 4 Primary KPI Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- KPI 1 -->
+      <div class="kpi-card">
+        <div class="text-2xl md:text-3xl font-extrabold tracking-tight">Rs 7.2 Cr</div>
+        <div class="text-xs uppercase tracking-wider text-slate-300 mt-1 font-medium">Total Sales</div>
+        <div class="text-[11px] text-emerald-300 mt-2 font-mono">100% of Target</div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card">
+        <div class="text-2xl md:text-3xl font-extrabold tracking-tight">Rs 1.65 Cr</div>
+        <div class="text-xs uppercase tracking-wider text-slate-300 mt-1 font-medium">Total Profit</div>
+        <div class="text-[11px] text-emerald-300 mt-2 font-mono">+14.2% YoY Growth</div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card">
+        <div class="text-2xl md:text-3xl font-extrabold tracking-tight">22.9%</div>
+        <div class="text-xs uppercase tracking-wider text-slate-300 mt-1 font-medium">Profit Margin</div>
+        <div class="text-[11px] text-emerald-300 mt-2 font-mono">Industry Avg: 18.5%</div>
+      </div>
+
+      <!-- KPI 4 -->
+      <div class="kpi-card">
+        <div class="text-2xl md:text-3xl font-extrabold tracking-tight">18,450</div>
+        <div class="text-xs uppercase tracking-wider text-slate-300 mt-1 font-medium">Total Orders</div>
+        <div class="text-[11px] text-sky-300 mt-2 font-mono">AOV: Rs 3,902</div>
+      </div>
+    </div>
+
+    <!-- Charts Grid Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Chart 1: Monthly Sales vs Profit -->
+      <div class="lg:col-span-8 chart-container">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-800">Monthly Sales vs Profit (Rs Lakh)</h3>
+          <div class="flex items-center gap-4 text-xs font-semibold">
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#1B365D]"></span> Sales</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#26A69A]"></span> Profit</span>
+          </div>
+        </div>
+
+        <!-- SVG Line Chart matching reference -->
+        <svg viewBox="0 0 620 220" class="w-full h-auto overflow-visible">
+          <!-- Horizontal Grid Lines & Y Labels (0 to 80) -->
+          <g class="text-[11px] fill-slate-400 font-mono">
+            <line x1="35" y1="180" x2="600" y2="180" class="grid-line" />
+            <text x="15" y="184">0</text>
+            <line x1="35" y1="140" x2="600" y2="140" class="grid-line" />
+            <text x="15" y="144">20</text>
+            <line x1="35" y1="100" x2="600" y2="100" class="grid-line" />
+            <text x="15" y="104">40</text>
+            <line x1="35" y1="60" x2="600" y2="60" class="grid-line" />
+            <text x="15" y="64">60</text>
+            <line x1="35" y1="20" x2="600" y2="20" class="grid-line" />
+            <text x="15" y="24">80</text>
+          </g>
+
+          <!-- Sales Path (Navy) -->
+          <!-- Jan:42->96, Feb:45->90, Mar:51->78, Apr:48->84, May:55->70, Jun:60->60, Jul:58->64, Aug:63->54, Sep:67->46, Oct:70->40, Nov:76->28, Dec:85->10 -->
+          <polyline fill="none" stroke="#1B365D" stroke-width="2.5"
+            points="50,96 100,90 150,78 200,84 250,70 300,60 350,64 400,54 450,46 500,40 550,28 600,10" />
+
+          <!-- Profit Path (Teal) -->
+          <!-- Jan:8->164, Feb:9->162, Mar:11->158, Apr:9->162, May:12->156, Jun:14->152, Jul:13->154, Aug:15->150, Sep:16->148, Oct:17->146, Nov:19->142, Dec:22->136 -->
+          <polyline fill="none" stroke="#26A69A" stroke-width="2.5"
+            points="50,164 100,162 150,158 200,162 250,156 300,152 350,154 400,150 450,148 500,146 550,142 600,136" />
+
+          <!-- Sales Dots -->
+          <g fill="#1B365D">
+            <circle cx="50" cy="96" r="4.5" /><circle cx="100" cy="90" r="4.5" />
+            <circle cx="150" cy="78" r="4.5" /><circle cx="200" cy="84" r="4.5" />
+            <circle cx="250" cy="70" r="4.5" /><circle cx="300" cy="60" r="4.5" />
+            <circle cx="350" cy="64" r="4.5" /><circle cx="400" cy="54" r="4.5" />
+            <circle cx="450" cy="46" r="4.5" /><circle cx="500" cy="40" r="4.5" />
+            <circle cx="550" cy="28" r="4.5" /><circle cx="600" cy="10" r="4.5" />
+          </g>
+
+          <!-- Profit Dots -->
+          <g fill="#26A69A">
+            <circle cx="50" cy="164" r="4.5" /><circle cx="100" cy="162" r="4.5" />
+            <circle cx="150" cy="158" r="4.5" /><circle cx="200" cy="162" r="4.5" />
+            <circle cx="250" cy="156" r="4.5" /><circle cx="300" cy="152" r="4.5" />
+            <circle cx="350" cy="154" r="4.5" /><circle cx="400" cy="150" r="4.5" />
+            <circle cx="450" cy="148" r="4.5" /><circle cx="500" cy="146" r="4.5" />
+            <circle cx="550" cy="142" r="4.5" /><circle cx="600" cy="136" r="4.5" />
+          </g>
+
+          <!-- X Axis Labels -->
+          <g class="text-[11px] fill-slate-500 font-medium" text-anchor="middle">
+            <text x="50" y="200">Jan</text><text x="100" y="200">Feb</text>
+            <text x="150" y="200">Mar</text><text x="200" y="200">Apr</text>
+            <text x="250" y="200">May</text><text x="300" y="200">Jun</text>
+            <text x="350" y="200">Jul</text><text x="400" y="200">Aug</text>
+            <text x="450" y="200">Sep</text><text x="500" y="200">Oct</text>
+            <text x="550" y="200">Nov</text><text x="600" y="200">Dec</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Chart 2: Regional Pie Chart -->
+      <div class="lg:col-span-4 chart-container flex flex-col justify-between">
+        <h3 class="text-sm font-bold text-slate-800 mb-2">Sales by Region</h3>
+        
+        <div class="relative flex items-center justify-center my-auto py-2">
+          <svg viewBox="0 0 200 200" class="w-44 h-44">
+            <!-- Pie slices centered at 100,100 radius 85 -->
+            <!-- West: 38% (0 deg to 136.8 deg) -> #1E2D4A -->
+            <path d="M 100 100 L 100 15 A 85 85 0 0 1 157.1 162.9 Z" fill="#1B365D" />
+            <!-- North: 20% (136.8 to 208.8 deg) -> #E06D53 -->
+            <path d="M 100 100 L 157.1 162.9 A 85 85 0 0 1 59.1 174.4 Z" fill="#E06D53" />
+            <!-- South: 27% (208.8 to 306 deg) -> #26A69A -->
+            <path d="M 100 100 L 59.1 174.4 A 85 85 0 0 1 31.2 50.1 Z" fill="#26A69A" />
+            <!-- East: 15% (306 to 360 deg) -> #F7A37B -->
+            <path d="M 100 100 L 31.2 50.1 A 85 85 0 0 1 100 15 Z" fill="#F7A37B" />
+          </svg>
+        </div>
+
+        <!-- Legend / Proportions -->
+        <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#1B365D]"></span> West</span>
+            <span class="font-bold">38% (Rs 2.74 Cr)</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#26A69A]"></span> South</span>
+            <span class="font-bold">27% (Rs 1.94 Cr)</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#E06D53]"></span> North</span>
+            <span class="font-bold">20% (Rs 1.44 Cr)</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#F7A37B]"></span> East</span>
+            <span class="font-bold">15% (Rs 1.08 Cr)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Charts Grid Row 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Chart 3: Horizontal Bar Chart - Sales by Category -->
+      <div class="lg:col-span-7 chart-container">
+        <h3 class="text-sm font-bold text-slate-800 mb-3">Sales by Category (Rs Cr)</h3>
+        
+        <div class="space-y-3.5 py-1">
+          <!-- Toys: 0.7 Cr -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <span>Toys</span>
+              <span class="font-bold text-slate-900">Rs 0.7 Cr (9.7%)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-6 rounded overflow-hidden">
+              <div class="bg-[#26A69A] h-full rounded" style="width: 28%;"></div>
+            </div>
+          </div>
+
+          <!-- Grocery: 1.1 Cr -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <span>Grocery</span>
+              <span class="font-bold text-slate-900">Rs 1.1 Cr (15.3%)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-6 rounded overflow-hidden">
+              <div class="bg-[#26A69A] h-full rounded" style="width: 44%;"></div>
+            </div>
+          </div>
+
+          <!-- Clothing: 1.3 Cr -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <span>Clothing</span>
+              <span class="font-bold text-slate-900">Rs 1.3 Cr (18.1%)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-6 rounded overflow-hidden">
+              <div class="bg-[#26A69A] h-full rounded" style="width: 52%;"></div>
+            </div>
+          </div>
+
+          <!-- Furniture: 1.7 Cr -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <span>Furniture</span>
+              <span class="font-bold text-slate-900">Rs 1.7 Cr (23.6%)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-6 rounded overflow-hidden">
+              <div class="bg-[#26A69A] h-full rounded" style="width: 68%;"></div>
+            </div>
+          </div>
+
+          <!-- Electronics: 2.4 Cr -->
+          <div>
+            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+              <span>Electronics</span>
+              <span class="font-bold text-slate-900">Rs 2.4 Cr (33.3%)</span>
+            </div>
+            <div class="w-full bg-slate-100 h-6 rounded overflow-hidden">
+              <div class="bg-[#26A69A] h-full rounded" style="width: 96%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between text-[11px] text-slate-400 font-mono pt-2 mt-2 border-t border-slate-100">
+          <span>0.0</span><span>0.5</span><span>1.0</span><span>1.5</span><span>2.0</span><span>2.5 Cr</span>
+        </div>
+      </div>
+
+      <!-- Chart 4: Vertical Column Chart - Quarterly Sales -->
+      <div class="lg:col-span-5 chart-container">
+        <h3 class="text-sm font-bold text-slate-800 mb-3">Quarterly Sales (Rs Lakh)</h3>
+        
+        <svg viewBox="0 0 320 200" class="w-full h-auto">
+          <!-- Grid lines -->
+          <line x1="30" y1="160" x2="310" y2="160" class="grid-line" />
+          <text x="10" y="164" class="text-[11px] fill-slate-400 font-mono">0</text>
+          <line x1="30" y1="125" x2="310" y2="125" class="grid-line" />
+          <text x="5" y="129" class="text-[11px] fill-slate-400 font-mono">50</text>
+          <line x1="30" y1="90" x2="310" y2="90" class="grid-line" />
+          <text x="0" y="94" class="text-[11px] fill-slate-400 font-mono">100</text>
+          <line x1="30" y1="55" x2="310" y2="55" class="grid-line" />
+          <text x="0" y="59" class="text-[11px] fill-slate-400 font-mono">150</text>
+          <line x1="30" y1="20" x2="310" y2="20" class="grid-line" />
+          <text x="0" y="24" class="text-[11px] fill-slate-400 font-mono">200</text>
+
+          <!-- Bars (Coral: #E06D53) -->
+          <!-- Q1: 138L -> height = 138 * 0.7 = 96.6 -> y = 160 - 96.6 = 63.4 -->
+          <rect x="50" y="63.4" width="46" height="96.6" fill="#E06D53" rx="2" />
+          <text x="73" y="55" class="text-[10px] font-bold fill-slate-700 font-mono" text-anchor="middle">138L</text>
+
+          <!-- Q2: 163L -> height = 163 * 0.7 = 114.1 -> y = 160 - 114.1 = 45.9 -->
+          <rect x="115" y="45.9" width="46" height="114.1" fill="#E06D53" rx="2" />
+          <text x="138" y="38" class="text-[10px] font-bold fill-slate-700 font-mono" text-anchor="middle">163L</text>
+
+          <!-- Q3: 188L -> height = 188 * 0.7 = 131.6 -> y = 160 - 131.6 = 28.4 -->
+          <rect x="180" y="28.4" width="46" height="131.6" fill="#E06D53" rx="2" />
+          <text x="203" y="20" class="text-[10px] font-bold fill-slate-700 font-mono" text-anchor="middle">188L</text>
+
+          <!-- Q4: 231L -> height = 231 * 0.7 = 161.7 -> y = 160 - 161.7 = -1.7 (clamp to 10) -->
+          <rect x="245" y="5" width="46" height="155" fill="#E06D53" rx="2" />
+          <text x="268" y="18" class="text-[10px] font-bold fill-white font-mono" text-anchor="middle">231L</text>
+
+          <!-- X axis labels -->
+          <text x="73" y="180" class="text-xs font-semibold fill-slate-600" text-anchor="middle">Q1</text>
+          <text x="138" y="180" class="text-xs font-semibold fill-slate-600" text-anchor="middle">Q2</text>
+          <text x="203" y="180" class="text-xs font-semibold fill-slate-600" text-anchor="middle">Q3</text>
+          <text x="268" y="180" class="text-xs font-semibold fill-slate-600" text-anchor="middle">Q4</text>
+        </svg>
+
+        <div class="mt-2 text-[11px] text-slate-500 text-center font-medium bg-slate-50 py-1.5 rounded border border-slate-100">
+          Q4 generated <span class="font-bold text-slate-800">32.1%</span> of total annual revenue.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Caption matching reference image -->
+    <div class="text-xs italic text-slate-500 border-t border-slate-200 pt-3 text-center">
+      Figure: Sample sales dashboard with KPI cards, trend line, regional pie chart and category and quarterly charts (illustrative data).
+    </div>
+
+  </div>
+
+</body>
+</html>
